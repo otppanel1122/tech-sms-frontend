@@ -18,7 +18,7 @@
 
 <!-- Filters -->
 <div>
-  <label>Start Date: <input type="date" id="start_date"></label>
+  <label>Date: <input type="date" id="start_date"></label>
   <label>End Date: <input type="date" id="end_date"></label>
   <label>Sender ID: <input type="text" id="senderid" placeholder="Optional"></label>
   <label>Phone: <input type="text" id="phone" placeholder="Optional"></label>
@@ -77,23 +77,32 @@ async function fetchMessages() {
     });
 
     const data = await res.json();
+
+    if(!data.success) {
+      alert("Error: " + (data.message || "Unknown error"));
+      return;
+    }
+
     displayMessages(data.data || []);
   } catch (err) {
-    console.error(err);
+    console.error("Fetch error:", err);
     alert("Error fetching messages");
   }
 }
 
 function displayMessages(messages) {
+  console.log(messages); // ✅ Check data in console
+
   const tbody = document.querySelector("#smsTable tbody");
   tbody.innerHTML = "";
+
   messages.forEach(msg => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${msg.senderid || ""}</td>
-      <td>${msg.phone || ""}</td>
-      <td>${msg.message || ""}</td>
-      <td>${msg.datetime || ""}</td>
+      <td>${msg["Sender ID"] || ""}</td>
+      <td>${msg["Phone"] || ""}</td>
+      <td>${msg["Message"] || ""}</td>
+      <td>${msg["Datetime"] || ""}</td>
     `;
     tbody.appendChild(tr);
   });
