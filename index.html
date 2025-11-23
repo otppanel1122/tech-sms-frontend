@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech-SMS Dashboard</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 10px; background: #f2f2f2; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background: #eee; }
+  input, button { padding: 5px; margin: 2px; }
+</style>
+</head>
+<body>
+
+<h1>Tech-SMS Dashboard</h1>
+
+<!-- Filters -->
+<div>
+  <label>Start Date: <input type="date" id="start_date"></label>
+  <label>End Date: <input type="date" id="end_date"></label>
+  <label>Sender ID: <input type="text" id="senderid" placeholder="Optional"></label>
+  <label>Phone: <input type="text" id="phone" placeholder="Optional"></label>
+  <button onclick="fetchMessages()">Fetch Messages</button>
+</div>
+
+<!-- Table -->
+<table id="smsTable">
+  <thead>
+    <tr>
+      <th>Sender ID</th>
+      <th>Phone</th>
+      <th>Message</th>
+      <th>Date/Time</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- Pagination -->
+<div>
+  <button onclick="prevPage()">Previous</button>
+  <span id="pageInfo">Page 1</span>
+  <button onclick="nextPage()">Next</button>
+</div>
+
+<script>
+let currentPage = 1;
+const perPage = 20;
+
+async function fetchMessages() {
+  const start_date = document.getElementById("start_date").value;
+  const end_date = document.getElementById("end_date").value;
+  const senderid = document.getElementById("senderid").value;
+  const phone = document.getElementById("phone").value;
+
+  if(!start_date || !end_date) {
+    alert("Start and End date are required!");
+    return;
+  }
+
+  const body = {
+    start_date: start_date + "T00:00:00.000Z",
+    end_date: end_date + "T23:59:59.000Z",
+    senderid,
+    phone,
+    page: currentPage,
+    per_page: perPage
+  };
+
+  try {
+    const res = await fetch("https://tech-sms-backend.onrender.com/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    displayMessages(data.data || []);
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching messages");
+  }
+}
+
+function displayMessages(messages) {
+  const tbody = document.querySelector("#smsTable tbody");
+  tbody.innerHTML = "";
+  messages.forEach(msg => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${msg.senderid || ""}</td>
+      <td>${msg.phone || ""}</td>
+      <td>${msg.message || ""}</td>
+      <td>${msg.datetime || ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("pageInfo").textContent = "Page " + currentPage;
+}
+
+function prevPage() {
+  if(currentPage > 1) {
+    currentPage--;
+    fetchMessages();
+  }
+}
+
+function nextPage() {
+  currentPage++;
+  fetchMessages();
+}
+</script>
+
+</body>
+</html>
